@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Metrics Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 40px;
+            font-size: 2.5em;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .metric-card h2 {
+            font-size: 1.2em;
+            color: #333;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .metric-item {
+            margin-bottom: 15px;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .metric-value {
+            font-size: 1.8em;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+
+        .progress-fill.warning {
+            background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .progress-fill.critical {
+            background: linear-gradient(90deg, #ff6b6b 0%, #ee5a6f 100%);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .timestamp {
+            text-align: center;
+            color: #999;
+            font-size: 0.85em;
+            margin-top: 30px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #4caf50;
+            color: white;
+            border-radius: 20px;
+            font-size: 0.85em;
+            margin-top: 10px;
+        }
+
+        .status.offline {
+            background: #f44336;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+                margin-bottom: 25px;
+            }
+
+            .metrics-grid {
+                gap: 20px;
+            }
+
+            .metric-card {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 System Metrics</h1>
+        
+        <div class="metrics-grid">
+            <!-- CPU Card -->
+            <div class="metric-card">
+                <h2>🖥️ CPU</h2>
+                <div class="metric-item">
+                    <div class="metric-label">Usage</div>
+                    <div class="metric-value" id="cpu-percent">--%</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="cpu-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">Cores</div>
+                    <div class="metric-value" id="cpu-cores">-</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">Frequency</div>
+                    <div class="metric-value" id="cpu-freq">-- MHz</div>
+                </div>
+            </div>
+
+            <!-- Memory Card -->
+            <div class="metric-card">
+                <h2>💾 Memory</h2>
+                <div class="metric-item">
+                    <div class="metric-label">Usage</div>
+                    <div class="metric-value" id="mem-percent">--%</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="mem-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">Used / Total</div>
+                    <div class="metric-value" id="mem-used">-- / -- GB</div>
+                </div>
+            </div>
+
+            <!-- Disk Card -->
+            <div class="metric-card">
+                <h2>💿 Disk</h2>
+                <div class="metric-item">
+                    <div class="metric-label">Usage</div>
+                    <div class="metric-value" id="disk-percent">--%</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="disk-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">Used / Total</div>
+                    <div class="metric-value" id="disk-used">-- / -- GB</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="timestamp">
+            <div id="status" class="status">Connecting...</div>
+            <div style="margin-top: 15px;">Last updated: <span id="last-updated">--</span></div>
+        </div>
+    </div>
+
+    <script>
+        async function updateMetrics() {
+            try {
+                const response = await fetch('/api/metrics');
+                const data = await response.json();
+
+                // CPU
+                document.getElementById('cpu-percent').textContent = data.cpu.percent.toFixed(1) + '%';
+                document.getElementById('cpu-cores').textContent = data.cpu.count;
+                document.getElementById('cpu-freq').textContent = data.cpu.frequency.toFixed(0) + ' MHz';
+                updateProgressBar('cpu-bar', data.cpu.percent);
+
+                // Memory
+                document.getElementById('mem-percent').textContent = data.memory.percent.toFixed(1) + '%';
+                document.getElementById('mem-used').textContent = 
+                    data.memory.used_gb + ' / ' + data.memory.total_gb + ' GB';
+                updateProgressBar('mem-bar', data.memory.percent);
+
+                // Disk
+                document.getElementById('disk-percent').textContent = data.disk.percent.toFixed(1) + '%';
+                document.getElementById('disk-used').textContent = 
+                    data.disk.used_gb + ' / ' + data.disk.total_gb + ' GB';
+                updateProgressBar('disk-bar', data.disk.percent);
+
+                // Status
+                const status = document.getElementById('status');
+                status.textContent = '● Online';
+                status.classList.remove('offline');
+
+                // Timestamp
+                const now = new Date();
+                document.getElementById('last-updated').textContent = 
+                    now.toLocaleTimeString();
+
+            } catch (error) {
+                console.error('Error fetching metrics:', error);
+                const status = document.getElementById('status');
+                status.textContent = '● Offline';
+                status.classList.add('offline');
+            }
+        }
+
+        function updateProgressBar(elementId, percent) {
+            const bar = document.getElementById(elementId);
+            bar.style.width = percent + '%';
+            
+            // Color coding
+            bar.classList.remove('warning', 'critical');
+            if (percent >= 90) {
+                bar.classList.add('critical');
+            } else if (percent >= 70) {
+                bar.classList.add('warning');
+            }
+        }
+
+        // Update metrics every 2 seconds
+        updateMetrics();
+        setInterval(updateMetrics, 2000);
+    </script>
+</body>
+</html>
