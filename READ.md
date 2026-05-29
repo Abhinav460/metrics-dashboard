@@ -1,12 +1,12 @@
 # System Metrics Dashboard
 
-A real-time system metrics monitor built with **Flask**, **psutil**, and **Docker**. Streams live CPU, memory, and disk usage to a browser dashboard that refreshes every 2 seconds.
+A real-time system metrics monitor built with **Flask** and **psutil**. Displays live CPU, memory, and disk usage in a browser dashboard that auto-refreshes every 2 seconds.
 
 ---
 
 ## Overview
 
-A background thread continuously samples `cpu_percent` so the API endpoint never blocks. Each request to `/api/metrics` returns a snapshot of CPU, memory, and disk in a normalized JSON shape — accounting for platform quirks like macOS APFS volume accounting and Apple Silicon's missing `cpu_freq`.
+A background thread continuously samples CPU usage so the API never blocks on a measurement delay. Each request to `/api/metrics` returns a normalized JSON snapshot of CPU, memory, and disk — with platform-aware math for macOS APFS volumes and Apple Silicon.
 
 ---
 
@@ -15,22 +15,18 @@ A background thread continuously samples `cpu_percent` so the API endpoint never
 | Technology | Version | Purpose |
 |---|---|---|
 | Flask | 3.1.3 | Web framework, template rendering |
-| psutil | 7.2.2 | Cross-platform system metrics |
+| psutil | 7.2.2 | Cross-platform system metrics collection |
 | Werkzeug | 3.1.8 | WSGI utilities (Flask dependency) |
-| Docker | — | Containerization |
-| GitHub Actions | — | CI/CD — auto-build and push to GHCR |
 
 ---
 
 ## Features
 
-- **Real-time metrics** — CPU usage (%), memory used/total/free (GB), disk used/total/free (GB); refreshes every 2 seconds
-- **Non-blocking CPU sampling** — a daemon thread warms `psutil.cpu_percent` continuously so `/api/metrics` returns immediately without a 1-second measurement delay
-- **Platform-aware math** — memory uses `total - available` (not `memory.used`) to stay consistent with psutil's `percent` on macOS; disk uses `total - free` to account for APFS multi-volume layouts
-- **JSON API** — `/api/metrics` endpoint returns structured data for programmatic consumption or integration with external monitors
-- **Docker containerized** — runs anywhere with a single `docker run` command
-- **GitHub Actions CI/CD** — automatically builds and pushes a Docker image to GitHub Container Registry on every commit to `main`
-- **Built-in health checks** — Docker `HEALTHCHECK` monitors the container
+- **Real-time metrics** — CPU (%), memory and disk used/total/free in GB; refreshes every 2 seconds
+- **Non-blocking CPU sampling** — daemon thread keeps `cpu_percent` warm so `/api/metrics` returns instantly without a 1-second stall
+- **Platform-aware math** — memory uses `total - available` to stay consistent with psutil's `percent` on macOS; disk uses `total - free` to handle APFS multi-volume layouts correctly
+- **JSON API** — `/api/metrics` endpoint for programmatic access or integration with other tools
+- **Zero config** — no API keys, no database, no environment variables needed
 
 ---
 
@@ -38,10 +34,9 @@ A background thread continuously samples `cpu_percent` so the API endpoint never
 
 ```
 metrics-dashboard/
-├── app.py              # Flask app, background CPU sampler, metrics logic
+├── app.py              # Flask app, background CPU sampler, route handlers
 ├── templates/
 │   └── index.html      # Dashboard frontend (auto-refreshes via JS)
-├── Dockerfile
 ├── requirements.txt
 └── READ.md
 ```
@@ -50,11 +45,9 @@ metrics-dashboard/
 
 ## Setup
 
-### Local (no Docker)
-
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-username/metrics-dashboard.git
+git clone https://github.com/Abhinav460/metrics-dashboard.git
 cd metrics-dashboard
 
 # 2. Create and activate a virtual environment
@@ -71,22 +64,13 @@ python app.py
 
 Open `http://localhost:5001` in your browser.
 
-### Docker (local build)
-
-```bash
-docker build -t metrics-dashboard .
-docker run -p 5001:5001 metrics-dashboard
-```
-
-### Docker (from GitHub Container Registry)
-
-```bash
-docker run -p 5001:5001 ghcr.io/your-username/metrics-dashboard:latest
-```
-
 ---
 
 ## API Reference
+
+### `GET /`
+
+Serves the live dashboard page.
 
 ### `GET /api/metrics`
 
@@ -115,17 +99,3 @@ Returns a JSON snapshot of current system metrics.
 ```
 
 `cpu.frequency` is `null` on Apple Silicon and some VMs where `psutil.cpu_freq()` returns `None`.
-
-### `GET /`
-
-Serves the live dashboard HTML page.
-
----
-
-## CI/CD
-
-GitHub Actions workflow (`.github/workflows/`) builds the Docker image and pushes it to GitHub Container Registry (`ghcr.io`) on every push to `main`. Pull the latest image with:
-
-```bash
-docker pull ghcr.io/your-username/metrics-dashboard:latest
-```
