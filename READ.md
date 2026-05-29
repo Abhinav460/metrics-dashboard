@@ -1,5 +1,7 @@
 # System Metrics Dashboard
 
+> **Note:** GitHub reports this project as majority HTML, but that's because the frontend JavaScript is embedded inline within `templates/index.html` rather than in separate `.js` files. The core application logic is Python.
+
 A real-time system metrics monitor built with **Flask** and **psutil**. Displays live CPU, memory, and disk usage in a browser dashboard that auto-refreshes every 2 seconds.
 
 ---
